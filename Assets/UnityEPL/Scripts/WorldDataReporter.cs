@@ -13,6 +13,9 @@ public class WorldDataReporter : DataReporter
 
     public int threshold = 1;
 
+    public int layerMask =  6;// 0b0110 choose layers NOT to report, with bits set in positions corresponding
+                                   // to ignored layers
+
     void Update()
     {
         if (reportTransform) CheckTransformReport();
@@ -84,7 +87,7 @@ public class WorldDataReporter : DataReporter
 
             // raycast to center mass
             foreach (Vector3 vertex in vertices) {
-                bool hit = Physics.Linecast(thisCamera.transform.position, vertex, out lineOfSightHit);
+                bool hit = Physics.Linecast(thisCamera.transform.position, vertex, out lineOfSightHit, layerMask);
 
                 Collider gameBox = gameObject.GetComponent<Collider>();
                 if(hit && lineOfSightHit.collider.Equals(gameBox)) {
