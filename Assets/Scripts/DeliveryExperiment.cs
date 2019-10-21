@@ -57,6 +57,8 @@ public class DeliveryExperiment : CoroutineExperiment
     private List<StoreComponent> this_trial_presented_stores = new List<StoreComponent>();
     private List<string> all_presented_objects = new List<string>();
 
+    private Syncbox syncs;
+
     public static void ConfigureExperiment(bool newUseRamulator, int newSessionNumber, string participantCode)
     {
         useRamulator = newUseRamulator;
@@ -72,6 +74,13 @@ public class DeliveryExperiment : CoroutineExperiment
 
 	void Start ()
     {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        // Start syncpulses
+        syncs = GameObject.Find("SyncBox").GetComponent<Syncbox>();
+        syncs.StartPulse();
+
 		StartCoroutine(ExperimentCoroutine());
 	}
 	
