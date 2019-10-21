@@ -5,94 +5,152 @@ using UnityEngine;
 [AddComponentMenu("UnityEPL/Reporters/World Data Reporter")]
 public class WorldDataReporter : DataReporter
 {
-    public string reportingID = "Object ID not set.";
     public bool reportTransform = true;
     public int framesPerTransformReport = 60;
-    public bool reportEntersView = true;
-    public bool reportLeavesView = true;
+    public bool reportView = true;
 
-    private Dictionary<Camera, bool> camerasToInViewfield = new Dictionary<Camera, bool>();
+    public int framesPerViewReport = 60;
+
+    public int threshold = 1;
+
+    void Update()
+    {
+        if (reportTransform) CheckTransformReport();
+        if (reportView) CheckViewReport();
+    }
 
     void Start()
     {
-        if ((reportEntersView || reportLeavesView) && GetComponent<Collider>() == null)
+        if (reportView && GetComponent<BoxCollider>() == null)
         {
-            throw new UnityException("You have selected enter/exit viewfield reporting for " + gameObject.name + " but there is no collider on the object." +
+            reportView = false;
+            throw new UnityException("You have selected enter/exit viewfield reporting for " + gameObject.name + " but there is no box collider on the object." +
                                       "  This feature uses collision detection to compare with camera bounds and other objects.  Please add a collider or " +
                                       "unselect viewfield enter/exit reporting.");
         }
     }
 
-    void Update()
+    public void DoTransformReport(System.Collections.Generic.Dictionary<string, object> extraData = null)
     {
-        if (reportTransform) CheckTransformReporting();
-        if (reportEntersView || reportLeavesView) CheckView();
+        if (extraData == null)
+            extraData = new Dictionary<string, object>();
+        System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>(extraData);
+        transformDict.Add("positionX", transform.position.x);
+        transformDict.Add("positionY", transform.position.y);
+        transformDict.Add("positionZ", transform.position.z);
+        transformDict.Add("rotationX", transform.position.x);
+        transformDict.Add("rotationY", transform.position.y);
+        transformDict.Add("rotationZ", transform.position.z);
+        transformDict.Add("scaleX", transform.position.x);
+        transformDict.Add("scaleY", transform.position.y);
+        transformDict.Add("scaleZ", transform.position.z);
+        transformDict.Add("object reporting id", reportingID);
+        eventQueue.Enqueue(new DataPoint(gameObject.name + " transform", RealWorldFrameDisplayTime(), transformDict));
     }
 
-    private void CheckTransformReporting()
+    private void CheckTransformReport()
     {
         if (Time.frameCount % framesPerTransformReport == 0)
         {
-            System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>();
-            transformDict.Add("positionX", transform.position.x);
-            transformDict.Add("positionY", transform.position.y);
-            transformDict.Add("positionZ", transform.position.z);
-            transformDict.Add("rotationX", transform.rotation.eulerAngles.x);
-            transformDict.Add("rotationY", transform.rotation.eulerAngles.y);
-            transformDict.Add("rotationZ", transform.rotation.eulerAngles.z);
-            transformDict.Add("scaleX", transform.localScale.x);
-            transformDict.Add("scaleY", transform.localScale.y);
-            transformDict.Add("scaleZ", transform.localScale.z);
-            eventQueue.Enqueue(new DataPoint(gameObject.name + " transform", RealWorldFrameDisplayTime(), transformDict));
+            DoTransformReport();
+        }
+    }
+
+    private void CheckViewReport()
+    {
+        if (Time.frameCount % framesPerViewReport == 0)
+        {
+            DoViewReport();
         }
     }
 
     //untested accuraccy, requires collider
-    void CheckView()
+    private void DoViewReport()
     {
-        bool enteredViewfield = false;
-        bool leftViewfield = false;
-
         Camera[] cameras = FindObjectsOfType<Camera>();
 
-        foreach (Camera camera in cameras)
+        foreach (Camera thisCamera in cameras)
         {
-            Plane[] frustrumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+            Plane[] frustrumPlanes = GeometryUtility.CalculateFrustumPlanes(thisCamera);
             Collider objectCollider = GetComponent<Collider>();
 
+            if(!GeometryUtility.TestPlanesAABB(frustrumPlanes, objectCollider.bounds)) {
+                continue;
+            }
+
             RaycastHit lineOfSightHit;
-            Physics.Linecast(camera.transform.position, gameObject.transform.position, out lineOfSightHit);
-            bool lineOfSight = lineOfSightHit.collider.Equals(gameObject.GetComponent<Collider>());
-            bool inView = GeometryUtility.TestPlanesAABB(frustrumPlanes, objectCollider.bounds) && lineOfSight;
-            if (inView && (!camerasToInViewfield.ContainsKey(camera) || camerasToInViewfield[camera] == false))
-            {
-                camerasToInViewfield[camera] = true;
-                enteredViewfield = true;
+            Vector3[] vertices = GetColliderVertexPositions(gameObject);
+            int hits = 0;
+
+            // raycast to center mass
+            foreach (Vector3 vertex in vertices) {
+                bool hit = Physics.Linecast(thisCamera.transform.position, vertex, out lineOfSightHit);
+
+                Collider gameBox = gameObject.GetComponent<Collider>();
+                if(hit && lineOfSightHit.collider.Equals(gameBox)) {
+                    hits++;
+                }
             }
-            else if (!inView && camerasToInViewfield.ContainsKey(camera) && camerasToInViewfield[camera] == true)
-            {
-                camerasToInViewfield[camera] = false;
-                leftViewfield = true;
-            }
+
+            Debug.Log(hits);
+
+            bool inView = hits >= threshold;
 
             string eventName = "";
-
-
-            if (!(enteredViewfield || leftViewfield))
-                continue;
-
             Dictionary<string, object> dataDict = new Dictionary<string, object>();
-            dataDict.Add("camera", camera.name);
-            if (enteredViewfield && reportEntersView)
-            {
-                eventName = gameObject.name + " enters view";
-                eventQueue.Enqueue(new DataPoint(eventName, RealWorldFrameDisplayTime(), dataDict));
-            }
-            if (leftViewfield && reportLeavesView)
-            {
-                eventName = gameObject.name + " leaves view";
-                eventQueue.Enqueue(new DataPoint(eventName, RealWorldFrameDisplayTime(), dataDict));
-            }
+            dataDict.Add("camera", thisCamera.name);
+            dataDict.Add("in view", inView);
+            dataDict.Add("ray hits", hits); // provide data to rethreshold
+            eventName = gameObject.name + "object in view";
+            eventQueue.Enqueue(new DataPoint(eventName, RealWorldFrameDisplayTime(), dataDict));
         }
+    }
+
+    private Vector3[] GetColliderVertexPositions(GameObject obj) {
+        Vector3[] vertices = new Vector3[9];
+        BoxCollider boxCollider = obj.GetComponent<BoxCollider>();
+
+        Vector3 colliderCenter  = boxCollider.center;
+        Vector3 colliderExtents = boxCollider.size/2.0f;
+        Vector3 pointOffset = new Vector3(.02f, .02f, .02f);
+
+        for (int i = 0; i < 8; i++)
+        {
+            Vector3 extents = colliderExtents;
+            Vector3 offset = pointOffset;
+            extents.Scale(new Vector3((i & 1) == 0 ? 1 : -1, (i & 2) == 0 ? 1 : -1, (i & 4) == 0 ? 1 : -1));
+            offset.Scale(new Vector3((i & 1) == 0 ? 1 : -1, (i & 2) == 0 ? 1 : -1, (i & 4) == 0 ? 1 : -1));
+
+            Vector3 vertexPosLocal = colliderCenter + extents - offset;
+
+            Vector3 vertexPosGlobal = boxCollider.transform.TransformPoint(vertexPosLocal);
+
+            // display vector3 to six decimal places
+            vertices[i] = vertexPosGlobal;
+            Debug.Log ("Vertex " + i + " @ " + vertexPosGlobal.ToString("F6"));
+        }
+        vertices[8] = boxCollider.transform.TransformPoint(colliderCenter);
+        /*
+        Debug.Log("$$$####$$$$");
+        
+        Debug.Log(extents);
+
+        thisCollider.transform.rotation = Quaternion.identity;
+        float insetDist = .1f;
+    
+        extents = thisCollider.bounds.size;
+        Debug.Log(extents);
+        vertices[0] = thisMatrix.MultiplyPoint3x4(extents - new Vector3(insetDist, insetDist, insetDist));
+        vertices[1] = thisMatrix.MultiplyPoint3x4(new Vector3(-extents.x + insetDist, extents.y - insetDist, extents.z - insetDist));
+        vertices[2] = thisMatrix.MultiplyPoint3x4(new Vector3(extents.x - insetDist, extents.y - insetDist, -extents.z + insetDist));
+        vertices[3] = thisMatrix.MultiplyPoint3x4(new Vector3(-extents.x + insetDist, extents.y - insetDist, -extents.z + insetDist));
+        vertices[4] = thisMatrix.MultiplyPoint3x4(new Vector3(extents.x - insetDist, -extents.y + insetDist, extents.z - insetDist));
+        vertices[5] = thisMatrix.MultiplyPoint3x4(new Vector3(-extents.x + insetDist, -extents.y + insetDist, extents.z - insetDist));
+        vertices[6] = thisMatrix.MultiplyPoint3x4(new Vector3(extents.x - insetDist, -extents.y + insetDist, -extents.z + insetDist));
+        vertices[7] = thisMatrix.MultiplyPoint3x4(-extents + new Vector3(insetDist, insetDist, insetDist));
+        vertices[8] = thisMatrix.MultiplyPoint3x4(new Vector3(0.0f, 0.0f, 0.0f));
+        */
+        //obj.transform.rotation = storedRotation;
+        return vertices;
     }
 }

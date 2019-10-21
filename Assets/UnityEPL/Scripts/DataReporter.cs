@@ -5,16 +5,19 @@ using UnityEngine;
 //this superclass implements an interface for retrieving behavioral events from a queue
 public abstract class DataReporter : MonoBehaviour
 {
+    public string reportingID = "Object ID not set.";
     private static System.DateTime realWorldStartTime;
     private static System.Diagnostics.Stopwatch stopwatch;
 
-    private static bool nativePluginRunning = false;
+    protected volatile static bool nativePluginRunning = false;
     private static bool startTimeInitialized = false;
 
     protected System.Collections.Concurrent.ConcurrentQueue<DataPoint> eventQueue = new ConcurrentQueue<DataPoint>();
 
-    private static double OSStartTime;
+    protected static double OSStartTime;
     private static float unityTimeStartTime;
+
+    public DataHandler reportTo;
 
     protected bool IsMacOS()
     {
@@ -23,6 +26,16 @@ public abstract class DataReporter : MonoBehaviour
 
     void Awake()
     {
+        GameObject data = GameObject.Find("DataCollection");
+        if(data != null) {
+            reportTo = (DataHandler)data.GetComponent("DataHandler");
+            reportTo.AddReporter(this);
+        }
+
+        if(reportingID == "Object ID not set.") {
+            GenerateDefaultName();
+        }
+
         if (!startTimeInitialized)
         {
             realWorldStartTime = System.DateTime.UtcNow;
@@ -32,23 +45,13 @@ public abstract class DataReporter : MonoBehaviour
             startTimeInitialized = true;
         }
 
-        if (IsMacOS() && !nativePluginRunning)
-        {
-            OSStartTime = UnityEPL.StartCocoaPlugin();
-            nativePluginRunning = true;
-        }
-
         if (QualitySettings.vSyncCount == 0)
             Debug.LogWarning("vSync is off!  This will cause tearing, which will prevent meaningful reporting of frame-based time data.");
     }
 
-    void OnDestroy()
+    void OnDisable() 
     {
-        if (IsMacOS() && nativePluginRunning)
-        {
-            UnityEPL.StopCocoaPlugin();
-            nativePluginRunning = false;
-        }
+        reportTo.RemoveReporter(this);
     }
 
     /// <summary>
@@ -91,6 +94,24 @@ public abstract class DataReporter : MonoBehaviour
         return dataPoints;
     }
 
+    public void DoReport(System.Collections.Generic.Dictionary<string, object> extraData = null)
+    {
+        if (extraData == null)
+            extraData = new System.Collections.Generic.Dictionary<string, object>();
+        System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>(extraData);
+        transformDict.Add("positionX", transform.position.x);
+        transformDict.Add("positionY", transform.position.y);
+        transformDict.Add("positionZ", transform.position.z);
+        transformDict.Add("rotationX", transform.position.x);
+        transformDict.Add("rotationY", transform.position.y);
+        transformDict.Add("rotationZ", transform.position.z);
+        transformDict.Add("scaleX", transform.position.x);
+        transformDict.Add("scaleY", transform.position.y);
+        transformDict.Add("scaleZ", transform.position.z);
+        transformDict.Add("object reporting id", reportingID);
+        eventQueue.Enqueue(new DataPoint(gameObject.name + " transform", RealWorldFrameDisplayTime(), transformDict));
+    }
+
     protected System.DateTime RealWorldFrameDisplayTime()
     {
         double secondsSinceUnityStart = Time.unscaledTime - unityTimeStartTime;
@@ -121,5 +142,10 @@ public abstract class DataReporter : MonoBehaviour
     public static System.DateTime GetStartTime()
     {
         return realWorldStartTime;
+    }
+
+    private void GenerateDefaultName()
+    {
+        reportingID = this.name + System.Guid.NewGuid();
     }
 }
