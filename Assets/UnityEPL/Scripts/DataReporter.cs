@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 using System.Collections.Concurrent;
 using UnityEngine;
 
@@ -26,12 +26,6 @@ public abstract class DataReporter : MonoBehaviour
 
     void Awake()
     {
-        GameObject data = GameObject.Find("DataCollection");
-        if(data != null) {
-            reportTo = (DataHandler)data.GetComponent("DataHandler");
-            reportTo.AddReporter(this);
-        }
-
         if(reportingID == "Object ID not set.") {
             GenerateDefaultName();
         }
@@ -49,9 +43,26 @@ public abstract class DataReporter : MonoBehaviour
             Debug.LogWarning("vSync is off!  This will cause tearing, which will prevent meaningful reporting of frame-based time data.");
     }
 
-    void OnDisable() 
+    protected virtual void OnEnable() {
+        if(!reportTo)  {
+            GameObject data = GameObject.Find("DataCollection");
+            if(data != null) {
+                reportTo = (DataHandler)data.GetComponent("DataHandler");
+            }
+        }
+
+        if(reportTo) {
+            eventQueue.Enqueue(new DataPoint(reportingID + "Enabled", RealWorldFrameDisplayTime(), new Dictionary<string, object>()));
+            reportTo.AddReporter(this);
+        }
+    }
+
+    protected virtual void OnDisable() 
     {
-        reportTo.RemoveReporter(this);
+        if(reportTo) { 
+            eventQueue.Enqueue(new DataPoint(reportingID + "Disabled", RealWorldFrameDisplayTime(), new Dictionary<string, object>()));
+            reportTo.RemoveReporter(this);
+        }
     }
 
     /// <summary>
