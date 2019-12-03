@@ -4,8 +4,7 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using MonoLibUsb;
 
-public class FreiburgSyncbox : MonoBehaviour 
-{
+public class FreiburgSyncbox : EventLoop {
     public ScriptedEventReporter scriptedEventReporter;
 
 	private const short FREIBURG_SYNCBOX_VENDOR_ID  = 0x0403;
@@ -23,16 +22,39 @@ public class FreiburgSyncbox : MonoBehaviour
     private MonoLibUsb.Profile.MonoUsbProfile freiburgSyncboxProfile = null;
     private MonoLibUsb.MonoUsbDeviceHandle freiburgSyncboxDeviceHandle = null;
 
+    private bool stopped = false;
+    private System.Random rnd;
+
+    public FreiburgSyncbox(ScriptedEventReporter reporter = null) {
+        scriptedEventReporter = reporter;
+    }
+
 	// Use this for initialization
-	void Start ()
+	public bool Init ()
 	{
-        BeginFreiburgSyncSession();
+        if(BeginFreiburgSyncSession()) {
+            rnd = new System.Random();
+            StopPulse();
+            StartLoop();
+            return true;
+        }
+        else {
+            return false;
+        }
 	}
 
-    private void BeginFreiburgSyncSession()
+    public void TestPulse() {
+        if(!IsRunning()) {
+            Do(new EventBase(StartPulse));
+            DoIn(new EventBase(StopPulse), 5000);
+        }
+    }
+
+    private bool BeginFreiburgSyncSession()
     {
         if (sessionHandle.IsInvalid)
-            throw new ExternalException("Failed to initialize context.");
+            // throw new ExternalException("Failed to initialize context.");
+            return false;
 
         MonoUsbApi.SetDebug(sessionHandle, 0);
 
@@ -56,31 +78,49 @@ public class FreiburgSyncbox : MonoBehaviour
         }
 
         if (freiburgSyncboxProfile == null)
-            throw new ExternalException("None of the connected USB devices were identified as a Freiburg syncbox.");
+            // throw new ExternalException("None of the connected USB devices were identified as a Freiburg syncbox.");
+            return false;
 
         freiburgSyncboxDeviceHandle = new MonoUsbDeviceHandle(freiburgSyncboxProfile.ProfileHandle);
         freiburgSyncboxDeviceHandle = freiburgSyncboxProfile.OpenDeviceHandle();
        
         if (freiburgSyncboxDeviceHandle == null)
-            throw new ExternalException("The ftd USB device was found but couldn't be opened");
+            // throw new ExternalException("The ftd USB device was found but couldn't be opened");
+            return false;
 
-        StartCoroutine(FreiburgPulse());
+        // StartCoroutine(FreiburgPulse());
+        return true;
     }
 
     private void EndFreiburgSyncSession()
     {
-        //These seem not to be required, and in fact cause crashes.  I'm not sure why.
+        //These seem not to be required, and in fact cause crashes.  I'm not sure why. (Henry)
         //freiburgSyncboxDeviceHandle.Close();
         //freiburgSyncboxProfile.Close ();
         //profileList.Close();
         //sessionHandle.Close();
     }
 
-	private IEnumerator FreiburgPulse()
-	{
-		while (true)
-		{
-            yield return new WaitForSeconds (Random.Range (TIME_BETWEEN_PULSES_MIN, TIME_BETWEEN_PULSES_MAX));
+    public void StartPulse() {
+        if (!IsRunning())
+        {
+            stopped = false;
+            DoIn(new EventBase(Pulse), (int)TIME_BETWEEN_PULSES_MIN * 1000);
+        }
+    }
+
+    public void StopPulse() {
+        stopped = true;
+    }
+
+    public bool IsRunning() {
+        return !stopped;
+    }
+
+    private void Pulse() {
+        if(!stopped)
+        {
+            LogPulse();
 
             int claimInterfaceResult = MonoUsbApi.ClaimInterface(freiburgSyncboxDeviceHandle, FREIBURG_SYNCBOX_INTERFACE_NUMBER);
             int actual_length;
@@ -91,17 +131,20 @@ public class FreiburgSyncbox : MonoBehaviour
 
             MonoUsbApi.ReleaseInterface(freiburgSyncboxDeviceHandle, FREIBURG_SYNCBOX_INTERFACE_NUMBER);
 
-            if (claimInterfaceResult != 0 || bulkTransferResult != 0)
-                break;
-		}
+            if (claimInterfaceResult != 0 || bulkTransferResult != 0) {
+                Debug.Log("Restarting sync session.");
+                EndFreiburgSyncSession();
+                BeginFreiburgSyncSession();
+            }
 
-        Debug.Log("Restarting sync session.");
-        EndFreiburgSyncSession();
-        BeginFreiburgSyncSession();
-	}
+            // Wait a random interval between min and max
+            int timeBetweenPulses = (int)(TIME_BETWEEN_PULSES_MIN + (int)(rnd.NextDouble() * (TIME_BETWEEN_PULSES_MAX - TIME_BETWEEN_PULSES_MIN)));
+            DoIn(new EventBase(Pulse), timeBetweenPulses);
+		}
+    }
 
     private void LogPulse()
     {
-        scriptedEventReporter.ReportScriptedEvent("Sync pulse begin", new System.Collections.Generic.Dictionary<string, object>());
+        scriptedEventReporter?.ReportScriptedEvent("Sync pulse begin", new System.Collections.Generic.Dictionary<string, object>());
     }
 }

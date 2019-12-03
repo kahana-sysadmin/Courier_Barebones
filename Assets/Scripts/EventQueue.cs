@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System;
 using UnityEngine;
 
-public class EventQueue : MonoBehaviour {
+public class EventQueue  {
     public ConcurrentQueue<IEventBase> eventQueue;
 
     protected volatile int repeatingEventID = 0;

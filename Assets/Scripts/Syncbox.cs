@@ -4,84 +4,41 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-public class Syncbox : EventLoop 
+public class Syncbox : MonoBehaviour 
 {
-
-    //Function from Corey's Syncbox plugin (called "ASimplePlugin")
-	[DllImport ("ASimplePlugin")]
-	private static extern IntPtr OpenUSB();
-	[DllImport ("ASimplePlugin")]
-	private static extern IntPtr CloseUSB();
-	[DllImport ("ASimplePlugin")]
-	private static extern IntPtr TurnLEDOn();
-	[DllImport ("ASimplePlugin")]
-	private static extern IntPtr TurnLEDOff();
-	[DllImport ("ASimplePlugin")]
-	private static extern float SyncPulse();
-
-    private const int PULSE_START_DELAY = 1000; // ms
-    private const int TIME_BETWEEN_PULSES_MIN = 800;
-    private const int TIME_BETWEEN_PULSES_MAX = 1200;
-
-    private volatile bool stopped = true;
-
-    private System.Random rnd;
-    
-    // from editor
+    // is really an inheritance structure, but using injection instead until
+    // time for a refactor is available 
+    private UPennSyncbox upennSync;
+    private FreiburgSyncbox freiburgSync;
     public ScriptedEventReporter scriptedInput = null;
 
-    public void Awake() {
-        Init();
-        rnd = new System.Random();
-    }
+    public void Start() {
+        upennSync = new UPennSyncbox(scriptedInput);
+        freiburgSync = new FreiburgSyncbox(scriptedInput); 
 
-    public void Init() {
-        //Debug.Log(Marshal.PtrToStringAuto(OpenUSB()));
+        if(!upennSync.Init()) {
+            upennSync = null;
+        }
 
-        StopPulse();
-        StartLoop();
-    }
-
-    public bool IsRunning() {
-        return !stopped;
-    }
-
-    public void TestPulse() {
-        if(!IsRunning()) {
-            Do(new EventBase(StartPulse));
-            DoIn(new EventBase(StopPulse), 5000);
+        if(!freiburgSync.Init()) {
+            freiburgSync = null;
         }
     }
 
     public void StartPulse() {
-        if (!IsRunning())
-        {
-            stopped = false;
-            DoIn(new EventBase(Pulse), PULSE_START_DELAY);
-        }
+        Debug.Log("Starting Pulses");
+        upennSync?.StartPulse();
+        freiburgSync?.StartPulse();
     }
-
-	private void Pulse ()
-    {
-		if(!stopped)
-        {
-            // Send a pulse
-            if(scriptedInput != null)
-                scriptedInput.ReportScriptedEvent("syncPulse", new System.Collections.Generic.Dictionary<string, object>());
-
-            SyncPulse();
-
-            // Wait a random interval between min and max
-            int timeBetweenPulses = (int)(TIME_BETWEEN_PULSES_MIN + (int)(rnd.NextDouble() * (TIME_BETWEEN_PULSES_MAX - TIME_BETWEEN_PULSES_MIN)));
-            DoIn(new EventBase(Pulse), timeBetweenPulses);
-		}
-	}
 
     public void StopPulse() {
-        stopped = true;
+        upennSync?.StopPulse();
+        freiburgSync?.StopPulse();
     }
 
-    public void OnDisable() {
-        StopPulse();
+    public void TestPulse() {
+        Debug.Log("Testing");
+        upennSync?.TestPulse();
+        freiburgSync?.TestPulse();
     }
 }

@@ -12,27 +12,17 @@ public class BeginExperiment : MonoBehaviour
     public UnityEngine.UI.InputField participantCodeInput;
     public UnityEngine.UI.Toggle useRamulatorToggle;
     public UnityEngine.UI.Text beginButtonText;
+    public UnityEngine.UI.InputField sessionInput;
 
     private const string scene_name = "MainGame";
 
+    private void OnEnable() {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
     private void Update()
     {
-        if (IsValidParticipantName(participantCodeInput.text))
-        {
-            UnityEPL.ClearParticipants();
-            UnityEPL.AddParticipant(participantCodeInput.text);
-            UnityEPL.SetExperimentName("DBOY1");
-            beginExperimentButton.SetActive(true);
-            greyedOutButton.SetActive(false);
-            int nextSessionNumber = NextSessionNumber();
-            UnityEPL.SetSessionNumber(NextSessionNumber());
-            beginButtonText.text = LanguageSource.GetLanguageString("begin session") + " " + nextSessionNumber.ToString();
-        }
-        else
-        {
-            greyedOutButton.SetActive(true);
-            beginExperimentButton.SetActive(false);
-        }
+        
         if (DeliveryItems.ItemsExhausted())
         {
             beginExperimentButton.SetActive(false);
@@ -50,6 +40,41 @@ public class BeginExperiment : MonoBehaviour
         else
         {
             languageMismatchButton.SetActive(false);
+        }
+    }
+
+    public void UpdateParticipant() {
+        if (IsValidParticipantName(participantCodeInput.text))
+        {
+            UnityEPL.ClearParticipants();
+            UnityEPL.AddParticipant(participantCodeInput.text);
+            UnityEPL.SetExperimentName("DBOY1");
+            beginExperimentButton.SetActive(true);
+            greyedOutButton.SetActive(false);
+            int nextSessionNumber = NextSessionNumber();
+            UnityEPL.SetSessionNumber(NextSessionNumber());
+            sessionInput.text = nextSessionNumber.ToString();
+            beginButtonText.text = LanguageSource.GetLanguageString("begin session") + " " + nextSessionNumber.ToString();
+        }
+        else
+        {
+            greyedOutButton.SetActive(true);
+            beginExperimentButton.SetActive(false);
+        }
+    }
+
+    public void UpdateSession() {
+        int session;
+         
+        if(System.Int32.TryParse(sessionInput.text, out session)) {
+            beginButtonText.text = LanguageSource.GetLanguageString("begin session") + " " + session.ToString();
+            UnityEPL.SetSessionNumber(session);
+            beginExperimentButton.SetActive(true);
+            greyedOutButton.SetActive(false);
+        }
+        else {
+            greyedOutButton.SetActive(true);
+            beginExperimentButton.SetActive(false);
         }
     }
 

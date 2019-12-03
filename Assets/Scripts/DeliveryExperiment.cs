@@ -17,7 +17,7 @@ public class DeliveryExperiment : CoroutineExperiment
     private static int sessionNumber = -1;
     private static bool useRamulator;
 
-    private const string DBOY_VERSION = "v4.0";
+    private const string DBOY_VERSION = "v4.1";
     private const string RECALL_TEXT = "*******";
     private const int DELIVERIES_PER_TRIAL = 13;
     private const float MIN_FAMILIARIZATION_ISI = 0.4f;
@@ -81,6 +81,10 @@ public class DeliveryExperiment : CoroutineExperiment
         syncs = GameObject.Find("SyncBox").GetComponent<Syncbox>();
         syncs.StartPulse();
 
+        Dictionary<string, object> sceneData = new Dictionary<string, object>();
+        sceneData.Add("sceneName", "MainGame");
+        scriptedEventReporter.ReportScriptedEvent("loadScene", sceneData);
+
 		StartCoroutine(ExperimentCoroutine());
 	}
 	
@@ -90,6 +94,8 @@ public class DeliveryExperiment : CoroutineExperiment
         {
             throw new UnityException("Please call ConfigureExperiment before beginning the experiment.");
         }
+
+        // TODO: log scene changed
 
         //write versions to logfile
         LogVersions();
@@ -355,14 +361,15 @@ public class DeliveryExperiment : CoroutineExperiment
             StoreComponent nextStore = null;
             int random_store_index = -1;
             int tries = 0;
+
             do
             {
-                //Debug.Log(tries.ToString());
                 tries++;
                 random_store_index = Random.Range(0, unvisitedStores.Count);
                 nextStore = unvisitedStores[random_store_index];
             }
             while (nextStore.IsVisible() && tries < 17);
+
             unvisitedStores.RemoveAt(random_store_index);
 
 
@@ -375,7 +382,6 @@ public class DeliveryExperiment : CoroutineExperiment
 
             while (!nextStore.PlayerInDeliveryPosition())
             {
-                //Debug.Log(nextStore.IsVisible());
                 yield return null;
             }
 
