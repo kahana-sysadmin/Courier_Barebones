@@ -27,15 +27,20 @@ public class PostHocViewReport : MonoBehaviour {
     }
 
     private IEnumerator CheckView() {
-        Debug.Log("Entering CheckView");
-        // TODO: check that player has been set, raise exception otherwise
+        UnityEPL.viewCheck = true;
         SceneManager.sceneLoaded += onSceneLoaded;
 
         string path = System.IO.Path.Combine(UnityEPL.GetDataPath(), "session.jsonl");
         destlog = System.IO.Path.Combine(UnityEPL.GetDataPath(), "viewlog.jsonl");
-        if(System.IO.File.Exists(destlog)) {
+
+        // Exit view logging if it has alread run or session log is absent
+        if(System.IO.File.Exists(destlog) || !System.IO.File.Exists(path)) {
+            SceneManager.sceneLoaded -= onSceneLoaded;
+            UnityEPL.viewCheck = false;
             SceneManager.LoadScene("MainMenu");
+            yield break;
         }
+
         boxes = SearchGameObjects(ObjectsToOmit); 
 
         List<JObject> log = ReadLog(path);
@@ -83,6 +88,7 @@ public class PostHocViewReport : MonoBehaviour {
         }
 
         SceneManager.sceneLoaded -= onSceneLoaded;
+        UnityEPL.viewCheck = false;
         SceneManager.LoadScene("MainMenu");
     }
 
@@ -91,6 +97,12 @@ public class PostHocViewReport : MonoBehaviour {
         player = GameObject.Find("Player");
         if(player == null) {
             throw new Exception("no player found");
+        }
+
+        DataHandler[] handlers = FindObjectsOfType<DataHandler>() as DataHandler[];
+        foreach(DataHandler dh in handlers) {
+            // avoid altering original log
+            dh.gameObject.SetActive(false);
         }
 
         boxes = SearchGameObjects(ObjectsToOmit);
@@ -136,17 +148,23 @@ public class PostHocViewReport : MonoBehaviour {
 
     public void WriteViewLine(JObject line, string id, int hits) {
         // needs public view report destination
-        // TODO: location
         string writeMe = "{";
         writeMe += "\"reportID\":" + "\"" + id + "\", ";
         writeMe += "\"time\":" + line["time"].ToString() + ", ";
         writeMe += "\"inView\":" + (hits>0).ToString() + ", ";
-        writeMe += "\"hits\":" + hits.ToString() + "}";
+        writeMe += "\"hits\":" + hits.ToString() + ", ";
+
+        GameObject obj = boxes[id];
+        writeMe += "\"locationX\":" + obj.transform.position.x.ToString() + ", ";
+        writeMe += "\"locationY\":" + obj.transform.position.y.ToString() + ", ";
+        writeMe += "\"locationZ\":" + obj.transform.position.z.ToString() + "}";
+
         System.IO.File.AppendAllText(destlog, writeMe + System.Environment.NewLine);
     }
 
     public void CleanScene(string SceneName) {
         // load scene
+        Debug.Log("Clean Scene");
         SceneManager.LoadScene(SceneName);
 
         // cleaning done in onSceneLoaded

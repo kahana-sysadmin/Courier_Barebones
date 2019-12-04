@@ -9,6 +9,8 @@ public static class UnityEPL
     private static string dataPath = null;
     private static int sessionNumber = -1;
 
+    public static bool viewCheck = false;
+
     //iPhones require special DLLImport due to static linkage
     //Add this to other external functions if adding iPhone support
 #if UNITY_IPHONE

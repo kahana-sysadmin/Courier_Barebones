@@ -74,6 +74,9 @@ public class DeliveryExperiment : CoroutineExperiment
 
 	void Start ()
     {
+        if(UnityEPL.viewCheck) {
+            return;
+        }
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
