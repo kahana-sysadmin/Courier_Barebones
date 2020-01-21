@@ -8,13 +8,11 @@ public class WriteToDiskHandler : DataHandler
     //more output formats may be added in the future
     public enum FORMAT { JSON_LINES };
     public FORMAT outputFormat;
+    public int framesPerWrite = 300;
 
     [HideInInspector]
     [SerializeField]
     private bool writeAutomatically = true;
-    [HideInInspector]
-    [SerializeField]
-    private int framesPerWrite = 30;
 
     private System.Collections.Generic.Queue<DataPoint> waitingPoints = new System.Collections.Generic.Queue<DataPoint>();
 

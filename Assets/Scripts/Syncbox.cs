@@ -12,21 +12,33 @@ public class Syncbox : MonoBehaviour
     private FreiburgSyncbox freiburgSync;
     public ScriptedEventReporter scriptedInput = null;
 
-    public void Start() {
+    public void Awake() {
         upennSync = new UPennSyncbox(scriptedInput);
         freiburgSync = new FreiburgSyncbox(scriptedInput); 
 
-        if(!upennSync.Init()) {
-            upennSync = null;
+        try {
+            if(!upennSync.Init()) {
+                Debug.Log("Invalid Handle");
+                upennSync = null;
+            }
+        }
+        catch {
+            Debug.Log("Failed opening Upenn Sync");
         }
 
-        if(!freiburgSync.Init()) {
-            freiburgSync = null;
+        try{
+            if(!freiburgSync.Init()) {
+                freiburgSync = null;
+            }
+        }
+        catch {
+            Debug.Log("Failed opening freiburg sync");
         }
     }
 
     public void StartPulse() {
         Debug.Log("Starting Pulses");
+        Debug.Log(upennSync);
         upennSync?.StartPulse();
         freiburgSync?.StartPulse();
     }
@@ -40,5 +52,10 @@ public class Syncbox : MonoBehaviour
         Debug.Log("Testing");
         upennSync?.TestPulse();
         freiburgSync?.TestPulse();
+    }
+
+    public void OnDisable() {
+        upennSync?.OnDisable();
+        freiburgSync?.OnDisable();
     }
 }

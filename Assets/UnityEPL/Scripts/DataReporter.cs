@@ -18,6 +18,7 @@ public abstract class DataReporter : MonoBehaviour
     private static float unityTimeStartTime;
 
     public DataHandler reportTo;
+    protected Transform xform;
 
     protected bool IsMacOS()
     {
@@ -44,6 +45,7 @@ public abstract class DataReporter : MonoBehaviour
     }
 
     protected virtual void OnEnable() {
+        xform = gameObject.transform;
         if(!reportTo)  {
             GameObject data = GameObject.Find("DataCollection");
             if(data != null) {
@@ -52,7 +54,6 @@ public abstract class DataReporter : MonoBehaviour
         }
 
         if(reportTo) {
-            eventQueue.Enqueue(new DataPoint(reportingID + "Enabled", RealWorldFrameDisplayTime(), new Dictionary<string, object>()));
             reportTo.AddReporter(this);
         }
     }
@@ -110,15 +111,12 @@ public abstract class DataReporter : MonoBehaviour
         if (extraData == null)
             extraData = new System.Collections.Generic.Dictionary<string, object>();
         System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>(extraData);
-        transformDict.Add("positionX", transform.position.x);
-        transformDict.Add("positionY", transform.position.y);
-        transformDict.Add("positionZ", transform.position.z);
-        transformDict.Add("rotationX", transform.position.x);
-        transformDict.Add("rotationY", transform.position.y);
-        transformDict.Add("rotationZ", transform.position.z);
-        transformDict.Add("scaleX", transform.position.x);
-        transformDict.Add("scaleY", transform.position.y);
-        transformDict.Add("scaleZ", transform.position.z);
+        transformDict.Add("positionX", xform.position.x);
+        transformDict.Add("positionY", xform.position.y);
+        transformDict.Add("positionZ", xform.position.z);
+        transformDict.Add("rotationX", xform.rotation.eulerAngles.x);
+        transformDict.Add("rotationY", xform.rotation.eulerAngles.y);
+        transformDict.Add("rotationZ", xform.rotation.eulerAngles.z);
         transformDict.Add("object reporting id", reportingID);
         eventQueue.Enqueue(new DataPoint(gameObject.name + " transform", RealWorldFrameDisplayTime(), transformDict));
     }

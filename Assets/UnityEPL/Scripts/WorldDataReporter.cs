@@ -51,24 +51,36 @@ public class WorldDataReporter : DataReporter
 
     // TODO: gather data in single function, use wrapper to set event type
 
-    public void DoTransformReport(System.Collections.Generic.Dictionary<string, object> extraData = null)
+    public void DoTransformReport(System.Collections.Generic.Dictionary<string, object> extraData)
     {
-        if (extraData == null)
-            extraData = new Dictionary<string, object>();
         System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>(extraData);
-        transformDict.Add("positionX", transform.position.x);
-        transformDict.Add("positionY", transform.position.y);
-        transformDict.Add("positionZ", transform.position.z);
-        transformDict.Add("rotationW", transform.rotation.w);
-        transformDict.Add("rotationX", transform.rotation.x);
-        transformDict.Add("rotationY", transform.rotation.y);
-        transformDict.Add("rotationZ", transform.rotation.z);
-        transformDict.Add("scaleX", transform.localScale.x);
-        transformDict.Add("scaleY", transform.localScale.y);
-        transformDict.Add("scaleZ", transform.localScale.z);
+        transformDict.Add("positionX", xform.position.x);
+        transformDict.Add("positionY", xform.position.y);
+        transformDict.Add("positionZ", xform.position.z);
+
+        transformDict.Add("rotationX", xform.rotation.eulerAngles.x);
+        transformDict.Add("rotationY", xform.rotation.eulerAngles.y);
+        transformDict.Add("rotationZ", xform.rotation.eulerAngles.z);
+
         transformDict.Add("reportID", reportingID);
         transformDict.Add("objectName", gameObject.name);
-        eventQueue.Enqueue(new DataPoint("itemTransform", RealWorldFrameDisplayTime(), transformDict));
+        eventQueue.Enqueue(new DataPoint(gameObject.name + "Transform", RealWorldFrameDisplayTime(), transformDict));
+    }
+
+    public void DoTransformReport()
+    {
+        System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>();
+        transformDict.Add("positionX", xform.position.x);
+        transformDict.Add("positionY", xform.position.y);
+        transformDict.Add("positionZ", xform.position.z);
+
+        transformDict.Add("rotationX", xform.rotation.eulerAngles.x);
+        transformDict.Add("rotationY", xform.rotation.eulerAngles.y);
+        transformDict.Add("rotationZ", xform.rotation.eulerAngles.z);
+
+        transformDict.Add("reportID", reportingID);
+        transformDict.Add("objectName", gameObject.name);
+        eventQueue.Enqueue(new DataPoint(gameObject.name + "Transform", RealWorldFrameDisplayTime(), transformDict));
     }
 
     private void CheckTransformReport()
@@ -81,51 +93,23 @@ public class WorldDataReporter : DataReporter
 
     private void DoSpawnReport() {
         System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>();
-        transformDict.Add("positionX", transform.position.x);
-        transformDict.Add("positionY", transform.position.y);
-        transformDict.Add("positionZ", transform.position.z);
-        transformDict.Add("rotationW", transform.rotation.w);
-        transformDict.Add("rotationX", transform.rotation.x);
-        transformDict.Add("rotationY", transform.rotation.y);
-        transformDict.Add("rotationZ", transform.rotation.z);
-        transformDict.Add("scaleX", transform.localScale.x);
-        transformDict.Add("scaleY", transform.localScale.y);
-        transformDict.Add("scaleZ", transform.localScale.z);
+        transformDict.Add("positionX", xform.position.x);
+        transformDict.Add("positionY", xform.position.y);
+        transformDict.Add("positionZ", xform.position.z);
+
+        transformDict.Add("rotationX", xform.rotation.eulerAngles.x);
+        transformDict.Add("rotationY", xform.rotation.eulerAngles.y);
+        transformDict.Add("rotationZ", xform.rotation.eulerAngles.z);
+
         transformDict.Add("reportID", reportingID);
         transformDict.Add("objectName", gameObject.name);
-        eventQueue.Enqueue(new DataPoint("itemSpawn", RealWorldFrameDisplayTime(), transformDict));
+        eventQueue.Enqueue(new DataPoint(gameObject.name + "Spawn", RealWorldFrameDisplayTime(), transformDict));
     }
     
     private void DoDespawnReport() {
         System.Collections.Generic.Dictionary<string, object> transformDict = new System.Collections.Generic.Dictionary<string, object>();
         transformDict.Add("reportID", reportingID);
         transformDict.Add("objectName", gameObject.name);
-        eventQueue.Enqueue(new DataPoint("itemDespawn", RealWorldFrameDisplayTime(), transformDict));
-    }
-
-    private Vector3[] GetColliderVertexPositions(BoxCollider boxCollider) {
-        Vector3[] vertices = new Vector3[9];
-
-        Vector3 colliderCenter  = boxCollider.center;
-        Vector3 colliderExtents = boxCollider.size/2.0f;
-        Vector3 pointOffset = new Vector3(.02f, .02f, .02f);
-
-        for (int i = 0; i < 8; i++)
-        {
-            Vector3 extents = colliderExtents;
-            Vector3 offset = pointOffset;
-            extents.Scale(new Vector3((i & 1) == 0 ? 1 : -1, (i & 2) == 0 ? 1 : -1, (i & 4) == 0 ? 1 : -1));
-            offset.Scale(new Vector3((i & 1) == 0 ? 1 : -1, (i & 2) == 0 ? 1 : -1, (i & 4) == 0 ? 1 : -1));
-
-            Vector3 vertexPosLocal = colliderCenter + extents - offset;
-
-            Vector3 vertexPosGlobal = boxCollider.transform.TransformPoint(vertexPosLocal);
-
-            // display vector3 to six decimal places
-            vertices[i] = vertexPosGlobal;
-        }
-        vertices[8] = boxCollider.transform.TransformPoint(colliderCenter);
-        
-        return vertices;
+        eventQueue.Enqueue(new DataPoint(gameObject.name + "Despawn", RealWorldFrameDisplayTime(), transformDict));
     }
 }

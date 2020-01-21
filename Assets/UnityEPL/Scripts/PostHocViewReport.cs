@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -18,6 +19,15 @@ public class PostHocViewReport : MonoBehaviour {
 
     private string destlog;
 
+    // NOTE: for Courier only
+    private bool storesMapped = false;
+    private double prevTime = -1.0f;
+    public bool slideshow = false;
+
+    public void ToggleSlideshow(bool value) {
+        slideshow = value;
+    }
+
     public void Awake() {
         DontDestroyOnLoad(this.gameObject);
     }
@@ -27,19 +37,12 @@ public class PostHocViewReport : MonoBehaviour {
     }
 
     private IEnumerator CheckView() {
+        // NOTE: global variable to stop game logic from modifying log file
         UnityEPL.viewCheck = true;
         SceneManager.sceneLoaded += onSceneLoaded;
 
         string path = System.IO.Path.Combine(UnityEPL.GetDataPath(), "session.jsonl");
         destlog = System.IO.Path.Combine(UnityEPL.GetDataPath(), "viewlog.jsonl");
-
-        // Exit view logging if it has alread run or session log is absent
-        if(System.IO.File.Exists(destlog) || !System.IO.File.Exists(path)) {
-            SceneManager.sceneLoaded -= onSceneLoaded;
-            UnityEPL.viewCheck = false;
-            SceneManager.LoadScene("MainMenu");
-            yield break;
-        }
 
         boxes = SearchGameObjects(ObjectsToOmit); 
 
@@ -52,35 +55,53 @@ public class PostHocViewReport : MonoBehaviour {
             string evType = (string)line["type"];
 
             // Two different methods of logging player, directly and via worlddatareporter
-            if((evType == "playerTransform")
-              ||  (evType == "itemTransform" && (string)line["data"]["reportID"] == "Player")) {
-
-                success = ReadLogLine(line, out pos, out rot);
-                player.transform.position = pos;
-                player.transform.rotation = rot;
-                Physics.SyncTransforms();
-
-                int hits;
-                foreach(string k in boxes.Keys) {
-                    hits = 0;
-                    hits = Raycast(boxes[k]); // tiny optimization could be made if rays hit other logged objects
-                    WriteViewLine(line, k, hits);
+            if(evType.ToLower() == "playertransform") {
+                // NOTE: Courier Only
+                if(!storesMapped) {
+                    continue;
                 }
+                if(!System.IO.File.Exists(destlog) && System.IO.File.Exists(path)) {
+                    success = ReadLogLine(line, out pos, out rot);
+                    player.transform.position = pos;
+                    player.transform.rotation = rot;
+                    Physics.SyncTransforms();
+
+                    int hits;
+                    foreach(string k in boxes.Keys) {
+                        if(ObjectsToOmit.Contains(k)) {
+                            continue;
+                        }
+
+                        hits = 0;
+                        hits = Raycast(boxes[k]); // tiny optimization could be made if rays hit other logged objects
+                        WriteViewLine(line, k, hits);
+                    }
+                }
+
+                if(slideshow && prevTime > 0) {
+                    yield return new WaitForSecondsRealtime((float)((double)line["time"] - prevTime) / 1000 );
+                }
+                prevTime = (double)line["time"];
             }
             else if(evType == "loadScene") {
                 CleanScene((string)line["data"]["sceneName"]);
                 yield return null;
             }
-            else if(evType == "itemSpawn") {
+            else if(evType == "store mappings") {
+                storesMapped = true;
+                boxes = RemapStores(line["data"]);
+            }
+            else if(evType.Contains("Spawn")) {
                 success = ReadLogLine(line, out pos, out rot);
 
                 // looks for a prefab whose name is contained in objectName 
                 CreateBox((string)line["data"]["objectName"], (string)line["data"]["reportID"], pos, rot);
             }
-            else if(evType == "itemDespawn") {
+            else if(evType.Contains("Despawn")) {
                 DestroyBox((string)line["data"]["reportID"]);
             } 
-            else if(evType == "itemTransform") {
+            else if(evType.Contains("Transform")) {
+                // playerTransform done in first if
                 success = ReadLogLine(line, out pos, out rot);
                 UpdateBox( (string)line["data"]["reportID"], pos, rot);
             }
@@ -90,6 +111,7 @@ public class PostHocViewReport : MonoBehaviour {
         SceneManager.sceneLoaded -= onSceneLoaded;
         UnityEPL.viewCheck = false;
         SceneManager.LoadScene("MainMenu");
+        yield break;
     }
 
     public void onSceneLoaded(Scene scene, LoadSceneMode mode) {
@@ -106,8 +128,6 @@ public class PostHocViewReport : MonoBehaviour {
         }
 
         boxes = SearchGameObjects(ObjectsToOmit);
-
-        //CheckView();
     }
 
     public List<JObject> ReadLog(string path) {
@@ -115,13 +135,14 @@ public class PostHocViewReport : MonoBehaviour {
         string line;
 
         if(System.IO.File.Exists(path)) {
-            System.IO.StreamReader file = new System.IO.StreamReader(path);
-            while((line = file.ReadLine()) != null)  
-            {  
-                log.Add(JObject.Parse(line));
-            } 
+            using(System.IO.StreamReader file =  new System.IO.StreamReader(path)) {
+                while((line = file.ReadLine()) != null)  
+                {  
+                    log.Add(JObject.Parse(line));
+                } 
 
-            return log;
+                return log;
+            }
         }
         else {
            throw new Exception("Log not found");
@@ -129,7 +150,7 @@ public class PostHocViewReport : MonoBehaviour {
     }
 
     public bool ReadLogLine(JObject prop, out Vector3 pos, out Quaternion rot) {
-        float x, y, z, w;
+        float x, y, z;
 
         x = (float)prop["data"]["positionX"];
         y = (float)prop["data"]["positionY"];
@@ -139,11 +160,40 @@ public class PostHocViewReport : MonoBehaviour {
         x = (float)prop["data"]["rotationX"];
         y = (float)prop["data"]["rotationY"];
         z = (float)prop["data"]["rotationZ"];
-        w = (float)prop["data"]["rotationW"];
-        rot = new Quaternion(x, y, z, w);
+
+        rot = Quaternion.Euler(x, y, z);
 
         // TODO
         return true;
+    }
+
+    public Dictionary<string, GameObject> RemapStores(JToken mappings) {
+        Queue<string> toMap = new Queue<string>(boxes.Keys);
+        Dictionary<string, GameObject> remapped = new Dictionary<string, GameObject>();
+        string store = "";
+        while(toMap.Count > 0) {
+            store = toMap.Dequeue();
+
+            GameObject shop = boxes[store];
+            if(shop.transform.root.name != "NamedStores") {
+                Debug.Log("not a store");
+                continue;
+            }
+
+            while(shop.transform.parent.name != "NamedStores") {
+                shop = shop.transform.parent.gameObject;
+            }
+            string storeName = shop.name;
+
+            string newName = (string) mappings[storeName];
+            newName = String.Join("", (new List<string>(newName.Split(new char[] {' ', '_'} ))).Select(x => char.ToUpper(x[0]) + x.Substring(1).ToLower()));
+            string oldName = String.Join("", (new List<string>(storeName.Split(new char[] {' ', '_'} ))).Select(x => char.ToUpper(x[0]) + x.Substring(1).ToLower()));
+
+            newName = store.Replace(oldName, newName);
+            boxes[store].GetComponent<WorldDataReporter>().reportingID = newName;
+            remapped.Add(newName, boxes[store]);
+        }
+        return remapped;
     }
 
     public void WriteViewLine(JObject line, string id, int hits) {
@@ -200,7 +250,6 @@ public class PostHocViewReport : MonoBehaviour {
             }
         }
     }
-
 
     public Dictionary<string, GameObject> SearchGameObjects(List<string> names) {
         Dictionary<string, GameObject> objects = new Dictionary<string, GameObject>();
