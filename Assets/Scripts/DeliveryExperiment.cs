@@ -68,7 +68,7 @@ public class DeliveryExperiment : CoroutineExperiment
 	void Update()
 	{
 		Cursor.visible = false;
-		Cursor.lockState = CursorLockMode.Locked;
+        Cursor.lockState = CursorLockMode.Locked;
 		// need to do this because macos thinks it knows better than you do
 	}
 
@@ -79,6 +79,9 @@ public class DeliveryExperiment : CoroutineExperiment
         }
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        Application.targetFrameRate = 300;
+        Cursor.SetCursor(new Texture2D(0,0), new Vector2(0,0), CursorMode.ForceSoftware);
+        QualitySettings.vSyncCount = 1;
 
         // Start syncpulses
         syncs = GameObject.Find("SyncBox").GetComponent<Syncbox>();
@@ -127,7 +130,9 @@ public class DeliveryExperiment : CoroutineExperiment
         Dictionary<string, object> storeMappings = new Dictionary<string, object>();
         foreach (StoreComponent store in environment.stores)
         {
-            storeMappings.Add(store.GetStoreName(), store.gameObject.name);
+            // old name : new name
+            storeMappings.Add(store.gameObject.name, store.GetStoreName());
+            //storeMappings.Add(store.GetStoreName(), store.gameObject.name);
             storeMappings.Add(store.GetStoreName() + " position X", store.transform.position.x);
             storeMappings.Add(store.GetStoreName() + " position Y", store.transform.position.y);
             storeMappings.Add(store.GetStoreName() + " position Z", store.transform.position.z);
@@ -430,7 +435,7 @@ public class DeliveryExperiment : CoroutineExperiment
         pointer.SetActive(true);
         ColorPointer(new Color(0.5f, 0.5f, 1f));
         pointer.transform.eulerAngles = new Vector3(0, Random.Range(0, 360), 0);
-        scriptedEventReporter.ReportScriptedEvent("pointing begins", new Dictionary<string, object>() { {"start direction", pointer.transform.eulerAngles.y} });
+        scriptedEventReporter.ReportScriptedEvent("pointing begins", new Dictionary<string, object>() { {"start direction", pointer.transform.eulerAngles.y}, {"store", nextStore.GetStoreName() } });
         pointerMessage.SetActive(true);
         pointerText.text = LanguageSource.GetLanguageString("next package prompt") +
                            LanguageSource.GetLanguageString(nextStore.GetStoreName()) + ". " +
@@ -555,7 +560,6 @@ public class DeliveryExperiment : CoroutineExperiment
                 return store.GetStoreName();
         throw new UnityException("That store game object doesn't exist in the stores list.");
     }
-
 }
 
 public static class IListExtensions

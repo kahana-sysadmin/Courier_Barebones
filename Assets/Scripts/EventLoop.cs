@@ -5,6 +5,9 @@ using System.Collections.Concurrent;
 public class EventLoop : EventQueue {
     private ManualResetEventSlim wait;
 
+    ~EventLoop() {
+        StopLoop();
+    }
 
     public void StartLoop(){
         // spawn thread

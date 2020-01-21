@@ -26,9 +26,10 @@ public class RamulatorInterface : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        if (zmqSocket != null)
+        if (zmqSocket != null) {
             zmqSocket.Close();
-        NetMQConfig.Cleanup();
+            NetMQConfig.Cleanup();
+        }
     }
 
     //this coroutine connects to ramulator and communicates how ramulator expects it to

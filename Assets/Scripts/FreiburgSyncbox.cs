@@ -147,4 +147,9 @@ public class FreiburgSyncbox : EventLoop {
     {
         scriptedEventReporter?.ReportScriptedEvent("Sync pulse begin", new System.Collections.Generic.Dictionary<string, object>());
     }
+
+
+    public void OnDisable() {
+        EndFreiburgSyncSession();
+    }
 }

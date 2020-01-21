@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-public class UPennSyncbox : EventLoop{
+public class UPennSyncbox : EventLoop {
 //Function from Corey's Syncbox plugin (called "ASimplePlugin")
 	[DllImport ("ASimplePlugin")]
 	private static extern IntPtr OpenUSB();
@@ -32,13 +32,17 @@ public class UPennSyncbox : EventLoop{
     }
 
     public bool Init() {
-        if(OpenUSB() != null) {
+        IntPtr ptr = OpenUSB();
+        if(ptr != IntPtr.Zero) {
             rnd = new System.Random();
             StopPulse();
             StartLoop();
 
+            Debug.Log("Successful Init");
+
             return true;
         }
+        Debug.Log("Failed Init");
         return false;
     }
 
@@ -49,15 +53,20 @@ public class UPennSyncbox : EventLoop{
     public void TestPulse() {
         if(!IsRunning()) {
             Do(new EventBase(StartPulse));
-            DoIn(new EventBase(StopPulse), 5000);
+            DoIn(new EventBase(StopPulse), 8000);
         }
     }
 
     public void StartPulse() {
+        Debug.Log("Reached Start Pulse");
         if (!IsRunning())
         {
             stopped = false;
             DoIn(new EventBase(Pulse), PULSE_START_DELAY);
+        }
+        else {
+            // try again until we're not running
+            DoIn(new EventBase(StartPulse), 4000);
         }
     }
 
@@ -65,6 +74,7 @@ public class UPennSyncbox : EventLoop{
     {
 		if(!stopped)
         {
+            Debug.Log("Pew!");
             // Send a pulse
             if(scriptedInput != null)
                 scriptedInput.ReportScriptedEvent("syncPulse", new System.Collections.Generic.Dictionary<string, object>());
@@ -84,5 +94,6 @@ public class UPennSyncbox : EventLoop{
     public void OnDisable() {
         StopPulse();
         CloseUSB();
+        StopLoop();
     }
 }
