@@ -1,0 +1,42 @@
+{"type":"loadScene","data":{"sceneName":"MainGame"},"time":1576511936408.97}
+{"type":"versions","data":{"UnityEPL version":"1.0","Experiment version":"v4.1","Logfile version":"1"},"time":1576511936410.19}
+{"type":"press any key prompt","data":{"displayed text":"Press any key to play movie."},"time":1576511936455.68}
+{"type":"PlayerTransform","data":{"positionX":-7.152557E-07,"positionY":0,"positionZ":-1.023182E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511936496.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511937329.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511938164.95}
+{"type":"text display cleared","data":{},"time":1576511938667.01}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511939372.95}
+{"type":"repeat video prompt","data":{"displayed text":"Press Y to continue to the first delivery day,   Press N to replay instructional video."},"time":1576511940208.11}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511940205.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511941038.95}
+{"type":"text display cleared","data":{},"time":1576511941622.3}
+{"type":"subject/session confirmation","data":{"displayed text":"Running a new session of Delivery Person.   Press Y to continue, N to quit."},"time":1576511941664.57}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511941872.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511942705.95}
+{"type":"text display cleared","data":{},"time":1576511942872.65}
+{"type":"press any key prompt","data":{"displayed text":"Press any key to record a sound after the beep."},"time":1576511942914.1}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511943537.95}
+{"type":"text display cleared","data":{},"time":1576511943709.26}
+{"type":"microphone test recording","data":{"displayed text":"Recording..."},"time":1576511943710.32}
+{"type":"text color changed","data":{"new color":"RGBA(1.000, 0.000, 0.000, 1.000)"},"time":1576511943711.39}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511944371.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511945205.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511946038.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511946871.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511947704.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511948538.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511949371.95}
+{"type":"microphone test playing","data":{"displayed text":"Playing..."},"time":1576511949588.16}
+{"type":"text color changed","data":{"new color":"RGBA(0.000, 1.000, 0.000, 1.000)"},"time":1576511949588.26}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511950287.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511951121.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511951954.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511952787.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511953620.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511954454.95}
+{"type":"text display cleared","data":{},"time":1576511954580.95}
+{"type":"restore original text color","data":{},"time":1576511954581.2}
+{"type":"microphone test confirmation","data":{"displayed text":"Did you hear the recording?  (Y = Continue / N = Try Again / C = Cancel)."},"time":1576511954581.21}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511955287.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511956121.95}
+{"type":"PlayerTransform","data":{"positionX":-2.741814E-06,"positionY":0,"positionZ":-3.922196E-12,"rotationX":0,"rotationY":270,"rotationZ":0,"reportID":"Player","objectName":"Player"},"time":1576511956954.95}

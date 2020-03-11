@@ -33,7 +33,7 @@ public class UPennSyncbox : EventLoop {
 
     public bool Init() {
         IntPtr ptr = OpenUSB();
-        if(ptr != IntPtr.Zero) {
+        if(Marshal.PtrToStringAuto(OpenUSB() == "opened USB!")) {
             rnd = new System.Random();
             StopPulse();
             StartLoop();
